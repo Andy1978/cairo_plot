@@ -203,16 +203,18 @@ void cairo_plot::cairo_draw()
   // draw marker
   if (plot_marker.size () > 0)
     {
+      //cout << "there are " << plot_marker.size () << " markers..." << endl;
       for (vector<marker*>::iterator it = plot_marker.begin() ; it != plot_marker.end(); ++it)
         {
           cairo_set_source_rgb(cr, (*it)->color[0], (*it)->color[1], (*it)->color[2]);
           double x = (*it)->x;
           double y = (*it)->y;
+          //cout << "x=" << x << " y=" << y << endl;
 
           double dx = (*it)->diameter;
           double dy = dx;
           cairo_device_to_user_distance (cr, &dx, &dy);
-          cout << "dx=" << dx << " dy=" << dy << endl;
+          //cout << "dx=" << dx << " dy=" << dy << endl;
 
 
           cairo_move_to (cr, x - dx - xlim[0], y - ylim[0]);
@@ -223,9 +225,11 @@ void cairo_plot::cairo_draw()
           //cairo_new_sub_path (cr);
           //cairo_arc (cr, x, y, dx, 0, 2 * M_PI);
 
+          cairo_save (cr);
           cairo_identity_matrix (cr);
           cairo_set_line_width (cr, linewidth);
           cairo_stroke (cr);
+          cairo_restore (cr);
         }
 
     }
@@ -264,6 +268,8 @@ void cairo_plot::load_csv (const char *fn, double FS)
     cerr << "Unable to open file '" << fn << "'" << endl;
 
   add_marker (11, 35, 30, 1.0, 0.0, 0.0);
+  add_marker (12, 25, 20, 0.0, 1.0, 0.0);
+  add_marker (12, 15, 10, 0.0, 0.0, 1.0);
 }
 
 int cairo_plot::handle (int event)
