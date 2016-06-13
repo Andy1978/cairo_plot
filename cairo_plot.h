@@ -70,12 +70,12 @@ public:
 
   //~ double min_xtick ()
   //~ {
-    //~ return *min_element (xtick.begin (), xtick.end());
+  //~ return *min_element (xtick.begin (), xtick.end());
   //~ }
-//~ 
+//~
   //~ double max_xtick ()
   //~ {
-    //~ return *max_element (xtick.begin (), xtick.end());
+  //~ return *max_element (xtick.begin (), xtick.end());
   //~ }
 
   void set_ytick (double start, double step, double stop)
@@ -88,12 +88,12 @@ public:
 
   //~ double min_ytick ()
   //~ {
-    //~ return *min_element (ytick.begin (), ytick.end());
+  //~ return *min_element (ytick.begin (), ytick.end());
   //~ }
-//~ 
+//~
   //~ double max_ytick ()
   //~ {
-    //~ return *max_element (ytick.begin (), ytick.end());
+  //~ return *max_element (ytick.begin (), ytick.end());
   //~ }
 
 
@@ -107,7 +107,7 @@ public:
   {
     xlim[0] = x0;
     xlim[1] = x1;
-    
+
     if (xtickmode == AUTO)
       {
         double step = tick_from_lim (xlim[1] - xlim[0]);
@@ -119,14 +119,14 @@ public:
   {
     ylim[0] = y0;
     ylim[1] = y1;
-    
+
     if (ytickmode == AUTO)
       {
         double step = tick_from_lim (ylim[1] - ylim[0]);
         set_ytick (ceil (ylim[0] / step) * step, step, floor (ylim[1] / step) * step);
       }
   }
-  
+
   void load_csv (const char *fn, double FS);
 
   int handle (int event);
