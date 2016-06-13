@@ -19,6 +19,27 @@ using namespace std;
 
 enum mode {AUTO, MANUAL};
 
+class cairo_plot;
+
+class marker
+{
+private:
+  double x;
+  double y;
+  double diameter;
+  double color[3];
+
+public:
+  marker (double _x, double _y, double _dia, double red, double green, double blue):
+    x(_x), y(_y), diameter (_dia)
+  {
+    color[0] = red;
+    color[1] = green;
+    color[2] = blue;
+  }
+  friend cairo_plot;
+};
+
 class cairo_plot : public cairo_box
 {
 private:
@@ -44,6 +65,8 @@ private:
   double ymin;
   double ymax;
 
+  vector<marker*> plot_marker;
+
   void cairo_draw_label (double x, double y, int align, const char *str, double size);
   void cairo_draw_grid ();
   void cairo_draw_axes ();
@@ -51,6 +74,7 @@ private:
 
 public:
   cairo_plot(int x, int y, int w, int h, const char *l=0);
+  ~cairo_plot ();
 
   void add_point (double x, double y)
   {
@@ -68,6 +92,11 @@ public:
       ymin = y;
 
     //cout << "xmin=" << xmin << " xmax=" << xmax << " ymin=" << ymin << " ymax=" << ymax << endl;
+  }
+
+  void add_marker (double x, double y, double dia, double red, double green, double blue)
+  {
+    plot_marker.push_back (new marker (x, y, dia, red, green, blue));
   }
 
   void clear_points ()
