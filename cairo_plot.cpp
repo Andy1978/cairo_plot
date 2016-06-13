@@ -14,14 +14,15 @@ cairo_plot::cairo_plot (int x, int y, int w, int h, const char *l)
 {
 
   clear_points ();
+  set_xlim (0, 10);
+  set_ylim (0, 5);
 
   //dummy plot
-  set_xtick (0, 2, 8);
-  set_ytick (0, 1, 6);
-  for (double k=0; k<6; k+=0.1)
-    add_point (k, 3+sin(k)*2);
-
-  update_limits ();
+  //set_xtick (0, 2, 8);
+  //set_ytick (0, 1, 6);
+  //for (double k=0; k<6; k+=0.1)
+  //  add_point (k, 3+sin(k)*2);
+  //update_limits ();
 }
 
 void cairo_plot::cairo_draw_label (double x, double y, int align, const char *str, double size)
@@ -171,23 +172,25 @@ void cairo_plot::cairo_draw()
 
   // draw data
   assert (xdata.size () == ydata.size ());
-  vector<double>::iterator xit = xdata.begin();
-  vector<double>::iterator yit = ydata.begin();
-  cairo_move_to (cr, *xit++ - xlim[0], *yit++ - ylim[0]);
+  if (xdata.size () > 0)
+  {
+    vector<double>::iterator xit = xdata.begin();
+    vector<double>::iterator yit = ydata.begin();
+    cairo_move_to (cr, *xit++ - xlim[0], *yit++ - ylim[0]);
 
-  for (; xit != xdata.end(); xit++, yit++)
-    {
-      cairo_line_to(cr, *xit - xlim[0], *yit - ylim[0]);
-    }
+    for (; xit != xdata.end(); xit++, yit++)
+      {
+        cairo_line_to(cr, *xit - xlim[0], *yit - ylim[0]);
+      }
 
-  //cairo_move_to(cr, 0.0, 0.0);
-  //cairo_line_to(cr, 8, 5);
+    //cairo_move_to(cr, 0.0, 0.0);
+    //cairo_line_to(cr, 8, 5);
 
-  // identity CTM so linewidth is in pixels
-  cairo_identity_matrix (cr);
-  cairo_set_line_width (cr, linewidth);
-  cairo_stroke (cr);
-
+    // identity CTM so linewidth is in pixels
+    cairo_identity_matrix (cr);
+    cairo_set_line_width (cr, linewidth);
+    cairo_stroke (cr);
+  }
 }
 
 void cairo_plot::load_csv (const char *fn, double FS)
@@ -220,7 +223,7 @@ void cairo_plot::load_csv (const char *fn, double FS)
       in.close();
     }
   else
-    cout << "Unable to open file '" << fn << "'" << endl;
+    cerr << "Unable to open file '" << fn << "'" << endl;
 }
 
 int cairo_plot::handle (int event)
@@ -243,12 +246,12 @@ int cairo_plot::handle (int event)
           last_x = Fl::event_x ();
           last_y = Fl::event_y ();
 
-          cout << "dx=" << dx << " dy=" << dy << endl;
+          //cout << "dx=" << dx << " dy=" << dy << endl;
 
           // FIXME: könnte man auch aus der cairo transform matrix rauslesen
           double fx = w() * (1 - 2 * border) / (xlim[1] - xlim[0]);
           double fy = h() * (1 - 2 * border) / (ylim[1] - ylim[0]);
-          cout << "fx=" << fx << " fy=" << fy << endl;
+          //cout << "fx=" << fx << " fy=" << fy << endl;
 
           set_xlim (xlim[0] - dx/fx, xlim[1] - dx/fx);
           set_ylim (ylim[0] + dy/fy, ylim[1] + dy/fy);
@@ -258,7 +261,7 @@ int cairo_plot::handle (int event)
         }
       break;
     case FL_MOUSEWHEEL:
-      cout << "event_dy " << Fl::event_dy () << endl;
+      //cout << "event_dy " << Fl::event_dy () << endl;
 
       double xw = (xlim[1] - xlim[0]) * Fl::event_dy ();
       set_xlim (xlim[0] - xw/10, xlim[1] + xw/10);

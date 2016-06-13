@@ -71,7 +71,7 @@ void cairo_box::draw(void)
   cairo_set_source_rgb (cr, 0.0, 0.0, 0.0); // set drawing color to black
   cairo_new_path(cr);
 
-  printf ("x()=%i, y()=%i, w()=%i, h()=%i\n", x(), y(), w(), h());
+  //printf ("x()=%i, y()=%i, w()=%i, h()=%i\n", x(), y(), w(), h());
   cairo_draw ();
 
   // release the cairo context
