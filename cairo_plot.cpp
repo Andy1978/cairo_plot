@@ -258,11 +258,8 @@ int cairo_plot::handle (int event)
           double fy = h() * (1 - 2 * border) / (ylim[1] - ylim[0]);
           cout << "fx=" << fx << " fy=" << fy << endl;
 
-          xlim[0] -= dx/fx;
-          xlim[1] -= dx/fx;
-
-          ylim[0] += dy/fy;
-          ylim[1] += dy/fy;
+          set_xlim (xlim[0] - dx/fx, xlim[1] - dx/fx);
+          set_ylim (ylim[0] + dy/fy, ylim[1] + dy/fy);
 
           redraw ();
           return 1;
@@ -272,12 +269,10 @@ int cairo_plot::handle (int event)
       cout << "event_dy " << Fl::event_dy () << endl;
 
       double xw = (xlim[1] - xlim[0]) * Fl::event_dy ();
-      xlim[0] -= xw/10;
-      xlim[1] += xw/10;
+      set_xlim (xlim[0] - xw/10, xlim[1] + xw/10);
 
       double yw = (ylim[1] - ylim[0]) * Fl::event_dy ();
-      ylim[0] -= yw/10;
-      ylim[1] += yw/10;
+      set_ylim (ylim[0] - yw/10, ylim[1] + yw/10);
 
       redraw ();
       return 1;

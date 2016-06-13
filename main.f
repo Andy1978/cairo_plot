@@ -17,16 +17,12 @@ decl {\#include <string>} {public local
 Function {} {open
 } {
   Fl_Window mainwin {
-    label {start test} open
+    label {start test} open selected
     xywh {2615 492 960 575} type Double resizable visible
   } {
-    Fl_Box plot {selected
-      xywh {15 15 620 555} box UP_BOX align 64
+    Fl_Box plot {
+      xywh {15 15 765 555} box UP_BOX align 64
       class cairo_plot
-    }
-    Fl_Box {} {
-      xywh {645 305 300 255} box UP_BOX align 64
-      class cairo_star
     }
     Fl_Button {} {
       label {y = 0.5 * x}
@@ -36,7 +32,7 @@ for (int k=0;k<10;++k)
   plot->add_point(k, 0.5*k);
 
 plot->redraw ();}
-      xywh {645 20 195 40}
+      xywh {800 20 150 40}
     }
     Fl_Button {} {
       label {y = cos (x)}
@@ -48,13 +44,13 @@ for (int k=0;k<100;++k)
     plot->add_point(p, cos (p));
   }
 plot->redraw ();}
-      xywh {645 65 195 40}
+      xywh {800 65 150 40}
     }
     Fl_Button {} {
-      label {load file}
+      label {load csv}
       callback {string fn = "Stahlwille_MANOSKOP_730_4_610315061_2.csv";
 plot->load_csv (fn.c_str (), 900);}
-      xywh {645 110 150 35}
+      xywh {800 110 150 40}
     }
   }
 }

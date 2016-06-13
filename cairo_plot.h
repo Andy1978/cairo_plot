@@ -97,6 +97,12 @@ public:
   //~ }
 
 
+  double tick_from_lim (double lim)
+  {
+    double f = 5;
+    return pow (f, ceil (log (lim / 10.0) / log(f)));
+  }
+
   void set_xlim (double x0, double x1)
   {
     xlim[0] = x0;
@@ -104,11 +110,23 @@ public:
     
     if (xtickmode == AUTO)
       {
-
+        double step = tick_from_lim (xlim[1] - xlim[0]);
+        set_xtick (ceil (xlim[0] / step) * step, step, floor (xlim[1] / step) * step);
       }
   }
 
-
+  void set_ylim (double y0, double y1)
+  {
+    ylim[0] = y0;
+    ylim[1] = y1;
+    
+    if (ytickmode == AUTO)
+      {
+        double step = tick_from_lim (ylim[1] - ylim[0]);
+        set_ytick (ceil (ylim[0] / step) * step, step, floor (ylim[1] / step) * step);
+      }
+  }
+  
   void load_csv (const char *fn, double FS);
 
   int handle (int event);
