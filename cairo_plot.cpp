@@ -13,11 +13,15 @@ cairo_plot::cairo_plot (int x, int y, int w, int h, const char *l)
     ylimmode (AUTO)
 {
 
+  clear_points ();
+
   //dummy plot
   set_xtick (0, 2, 8);
   set_ytick (0, 1, 6);
   for (double k=0; k<6; k+=0.1)
     add_point (k, 3+sin(k)*2);
+
+  update_limits ();
 }
 
 void cairo_plot::cairo_draw_label (double x, double y, int align, const char *str, double size)
@@ -30,13 +34,13 @@ void cairo_plot::cairo_draw_label (double x, double y, int align, const char *st
 
   cairo_move_to (cr, x, y);
 
-  print_matrix ();
+  //print_matrix ();
   cairo_matrix_t tmp;
   cairo_get_matrix (cr, &tmp);
   tmp.xx = 1;
   tmp.yy = 1;
   cairo_set_matrix (cr, &tmp);
-  print_matrix ();
+  //print_matrix ();
 
   //cairo_scale (cr, 1, -1);
 
@@ -122,7 +126,7 @@ void cairo_plot::cairo_draw_axes ()
 
 void cairo_plot::cairo_draw()
 {
-  printf ("w=%i h=%i ----------------------------\n", w (), h ());
+  //printf ("w=%i h=%i ----------------------------\n", w (), h ());
   cairo_identity_matrix (cr);
   // lower left
   cairo_translate(cr, x (), y () + h ());
@@ -130,7 +134,7 @@ void cairo_plot::cairo_draw()
   cairo_set_source_rgb(cr, 0.0, 0.0, 0.5);
   cairo_scale (cr, w (), -h ());
 
-  print_matrix ();
+  //print_matrix ();
 
   // full plot space 0..1 in X and Y
   // here we could plot some legend
@@ -202,16 +206,8 @@ void cairo_plot::load_csv (const char *fn, double FS)
           cnt++;
         }
 
-      //set_xtick (0, 2, trunc (cnt/FS) + 1);
-      set_xtick (4, 4, 20);
-      set_ytick (5, 10, 55);
-
-      xlim[0] = 3;
-      xlim[1] = 21;
-
-      ylim[0] = 3;
-      ylim[1] = 55;
-
+      update_limits ();
+      redraw ();
 
       //cout << "fail =" << in.fail() << endl;
       //cout << "bad =" << in.bad() << endl;
@@ -220,12 +216,8 @@ void cairo_plot::load_csv (const char *fn, double FS)
       if (in.fail () && ! in.eof ())
         cerr << "Couldn't read double in line " << cnt << endl;
       cout << "read " << cnt << " values..." << endl;
-      //while ( getline (in, line) )
-      //{
-      //  cout << line << '\n';
-      //}
+
       in.close();
-      redraw ();
     }
   else
     cout << "Unable to open file '" << fn << "'" << endl;
@@ -233,14 +225,14 @@ void cairo_plot::load_csv (const char *fn, double FS)
 
 int cairo_plot::handle (int event)
 {
-  cout << "event = " << fl_eventnames[event] << endl;
+  //cout << "event = " << fl_eventnames[event] << endl;
   static int last_x=0, last_y =0;
   switch (event)
     {
     case FL_PUSH:
       last_x = Fl::event_x ();
       last_y = Fl::event_y ();
-      cout << "last_x=" << last_x << " last_y" << last_y << endl;
+      //cout << "last_x=" << last_x << " last_y" << last_y << endl;
       return 1;
 
     case FL_DRAG:

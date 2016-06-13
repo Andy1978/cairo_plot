@@ -39,6 +39,10 @@ private:
 
   vector<double> xdata;
   vector<double> ydata;
+  double xmin;
+  double xmax;
+  double ymin;
+  double ymax;
 
   void cairo_draw_label (double x, double y, int align, const char *str, double size);
   void cairo_draw_grid ();
@@ -52,12 +56,28 @@ public:
   {
     xdata.push_back (x);
     ydata.push_back (y);
+
+    if (x > xmax)
+      xmax = x;
+    if (x < xmin)
+      xmin = x;
+
+    if (y > ymax)
+      ymax = y;
+    if (y < ymin)
+      ymin = y;
+
+    //cout << "xmin=" << xmin << " xmax=" << xmax << " ymin=" << ymin << " ymax=" << ymax << endl;
   }
 
   void clear_points ()
   {
     xdata.clear ();
     ydata.clear ();
+    xmin = 1.0/0.0;
+    ymin = 1.0/0.0;
+    xmax = - xmin;
+    ymax = - ymin;
   }
 
   void set_xtick (double start, double step, double stop)
@@ -125,6 +145,12 @@ public:
         double step = tick_from_lim (ylim[1] - ylim[0]);
         set_ytick (ceil (ylim[0] / step) * step, step, floor (ylim[1] / step) * step);
       }
+  }
+
+  void update_limits ()
+  {
+    set_xlim (xmin, xmax);
+    set_ylim (ymin, ymax);
   }
 
   void load_csv (const char *fn, double FS);

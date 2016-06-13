@@ -31,6 +31,7 @@ Function {} {open
 for (int k=0;k<10;++k)
   plot->add_point(k, 0.5*k);
 
+plot->update_limits ();
 plot->redraw ();}
       xywh {800 20 150 40}
     }
@@ -43,6 +44,7 @@ for (int k=0;k<100;++k)
     double p = k/10.0;
     plot->add_point(p, cos (p));
   }
+plot->update_limits ();
 plot->redraw ();}
       xywh {800 65 150 40}
     }
