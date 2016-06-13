@@ -1,4 +1,4 @@
-.PHONY:clean style
+.PHONY:clean style all
 
 TARGETS = main.cpp main.h main Stahlwille_MANOSKOP_730_4_610315061_2.csv
 CPPFLAGS = -Wall -Wextra -ggdb `fltk-config --use-cairo --cxxflags` -D USE_X11 -D FLTK_HAVE_CAIRO
@@ -22,6 +22,7 @@ style:
 
 Stahlwille_MANOSKOP_730_4_610315061_2.csv: Stahlwille_MANOSKOP_730_4_610315061_2.tar.gz
 	tar xzf $^
+	touch $@
 
 clean:
 	find . -name "octave-workspace" -exec rm {} \;
