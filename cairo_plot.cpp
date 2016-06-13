@@ -215,10 +215,10 @@ void cairo_plot::cairo_draw()
           cout << "dx=" << dx << " dy=" << dy << endl;
 
 
-          cairo_move_to (cr, x - dx, y);
-          cairo_line_to (cr, x + dx, y);
-          cairo_move_to (cr, x, y - dy);
-          cairo_line_to (cr, x, y + dy);
+          cairo_move_to (cr, x - dx - xlim[0], y - ylim[0]);
+          cairo_line_to (cr, x + dx - xlim[0], y- ylim[0]);
+          cairo_move_to (cr, x - xlim[0], y - dy - ylim[0]);
+          cairo_line_to (cr, x - xlim[0], y + dy - ylim[0]);
 
           //cairo_new_sub_path (cr);
           //cairo_arc (cr, x, y, dx, 0, 2 * M_PI);
