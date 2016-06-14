@@ -1,6 +1,9 @@
-function ret = tick_step (lim)
+function [ret_5, ret_2] = tick_step (range)
 
   f = 5;
-  ret = f .** ceil (log (diff (lim) / 10) / log(f));
+  ret_5 = f .** ceil (log (range / 10) / log(f));
+
+  f = 2;
+  ret_2 = f .** ceil (log (range / 10) / log(f));
 
 endfunction

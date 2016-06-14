@@ -2,7 +2,6 @@
 
 TARGETS = main.cpp main.h main Stahlwille_MANOSKOP_730_4_610315061_2.csv
 CPPFLAGS = -Wall -Wextra -ggdb `fltk-config --use-cairo --cxxflags` -D USE_X11 -D FLTK_HAVE_CAIRO
-#LDFLAGS = `fltk-config --use-cairo --ldflags` -lusb-1.0 -lsqlite3 -lcairo -lconfuse
 LDFLAGS = `fltk-config --use-cairo --ldflags`
 
 all: $(TARGETS)

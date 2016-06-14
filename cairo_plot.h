@@ -148,8 +148,12 @@ public:
 
   double tick_from_lim (double lim)
   {
-    double f = 5;
-    return pow (f, ceil (log (lim / 10.0) / log(f)));
+    double r5 = pow (5.0, ceil (log (lim / 10.0) / log(5.0)));
+    double r2 = pow (2.0, ceil (log (lim / 10.0) / log(2.0)));
+    if (lim / r5 < 5 && lim / r2 >= 5)
+      return r2;
+    else
+      return r5;
   }
 
   void set_xlim (double x0, double x1)
