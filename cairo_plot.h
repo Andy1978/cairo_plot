@@ -65,6 +65,11 @@ private:
   double ymin;
   double ymax;
 
+  double zoom_max_x;
+  double zoom_min_x;
+  double zoom_max_y;
+  double zoom_min_y;
+
   vector<marker*> plot_marker;
 
   void cairo_draw_label (double x, double y, int align, const char *str, double size);
@@ -99,7 +104,7 @@ public:
     plot_marker.push_back (new marker (x, y, dia, red, green, blue));
   }
 
-  void clear_points ()
+  void clear ()
   {
     xdata.clear ();
     ydata.clear ();
@@ -107,6 +112,7 @@ public:
     ymin = 1.0/0.0;
     xmax = - xmin;
     ymax = - ymin;
+    plot_marker.clear ();
   }
 
   void set_xtick (double start, double step, double stop)
@@ -148,42 +154,90 @@ public:
 
   double tick_from_lim (double lim)
   {
-    double r5 = pow (5.0, ceil (log (lim / 10.0) / log(5.0)));
-    double r2 = pow (2.0, ceil (log (lim / 10.0) / log(2.0)));
-    if (lim / r5 < 5 && lim / r2 >= 5)
-      return r2;
-    else
-      return r5;
+    // in GNU Octave
+    // n = round (3 * log10 (range / 7));
+    // ret = (mod(n, 3).^2 + 1) .* 10.^floor(n/3);
+    // Attention:
+    // Octave mod (n, 3) is not equal to C++ n%3
+
+    int n = round (3 * log (lim / 7.0) / log (10));
+    double mod3 = n%3;
+    if (mod3 < 0)
+      mod3 += 3;
+
+    return (pow (mod3, 2) + 1) * pow (10, floor (n / 3.0));
+  }
+
+  void zoom (double factor)
+  {
+    double new_w =  (xlim[1] - xlim[0]) * factor;
+    double new_h =  (ylim[1] - ylim[0]) * factor;
+
+    if (   new_w < zoom_max_x
+           && new_w > zoom_min_x
+           && new_h < zoom_max_y
+           && new_h > zoom_min_y )
+      {
+        double mean_x = (xlim[0] + xlim[1]) / 2;
+        double mean_y = (ylim[0] + ylim[1]) / 2;
+
+        set_xlim (mean_x - new_w/2, mean_x + new_w/2);
+        set_ylim (mean_y - new_h/2, mean_y + new_h/2);
+        redraw ();
+      }
   }
 
   void set_xlim (double x0, double x1)
   {
-    xlim[0] = x0;
-    xlim[1] = x1;
+    cout << "set_xlim (" << x0 << ", " << x1 << ")" << endl;
 
-    if (xtickmode == AUTO)
+    if (x1 > x0 + zoom_min_x)
       {
-        double step = tick_from_lim (xlim[1] - xlim[0]);
-        set_xtick (ceil (xlim[0] / step) * step, step, floor (xlim[1] / step) * step);
+        xlim[0] = x0;
+        xlim[1] = x1;
+
+        if (xtickmode == AUTO)
+          {
+            double step = tick_from_lim (xlim[1] - xlim[0]);
+            cout << "xstep=" << step << endl;
+            set_xtick (ceil (xlim[0] / step) * step, step, floor (xlim[1] / step) * step);
+          }
       }
+  }
+
+  void get_xlim (double &x0, double &x1)
+  {
+    x0 = xlim[0];
+    x1 = xlim[1];
   }
 
   void set_ylim (double y0, double y1)
   {
-    ylim[0] = y0;
-    ylim[1] = y1;
+    cout << "set_ylim (" << y0 << ", " << y1 << ")" << endl;
 
-    if (ytickmode == AUTO)
+    if (y1 > y0 + zoom_min_y)
       {
-        double step = tick_from_lim (ylim[1] - ylim[0]);
-        set_ytick (ceil (ylim[0] / step) * step, step, floor (ylim[1] / step) * step);
+        ylim[0] = y0;
+        ylim[1] = y1;
+
+        if (ytickmode == AUTO)
+          {
+            double step = tick_from_lim (ylim[1] - ylim[0]);
+            set_ytick (ceil (ylim[0] / step) * step, step, floor (ylim[1] / step) * step);
+          }
       }
+  }
+
+  void get_ylim (double &y0, double &y1)
+  {
+    y0 = ylim[0];
+    y1 = ylim[1];
   }
 
   void update_limits ()
   {
     set_xlim (xmin, xmax);
-    set_ylim (ymin, ymax);
+    set_ylim (ymin, ymax * 1.1);
   }
 
   void load_csv (const char *fn, double FS);

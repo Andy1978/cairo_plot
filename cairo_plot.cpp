@@ -10,10 +10,14 @@ cairo_plot::cairo_plot (int x, int y, int w, int h, const char *l)
     xtickmode (AUTO),
     ytickmode (AUTO),
     xlimmode (AUTO),
-    ylimmode (AUTO)
+    ylimmode (AUTO),
+    zoom_max_x (50),
+    zoom_min_x (0.02),
+    zoom_max_y (500),
+    zoom_min_y (0.05)
 {
 
-  clear_points ();
+  clear ();
   set_xlim (0, 10);
   set_ylim (0, 5);
 
@@ -242,7 +246,7 @@ void cairo_plot::load_csv (const char *fn, double FS)
   ifstream in (fn);
   if (in.is_open())
     {
-      clear_points ();
+      clear ();
       while (! in.fail ())
         {
           in >> value;
@@ -279,13 +283,20 @@ int cairo_plot::handle (int event)
   switch (event)
     {
     case FL_PUSH:
-      last_x = Fl::event_x ();
-      last_y = Fl::event_y ();
-      //cout << "last_x=" << last_x << " last_y" << last_y << endl;
+      if (Fl::event_button () == FL_RIGHT_MOUSE)
+        {
+          update_limits ();
+          redraw ();
+        }
+      else
+        {
+          last_x = Fl::event_x ();
+          last_y = Fl::event_y ();
+        }
       return 1;
 
     case FL_DRAG:
-      if (Fl::event_button () == 1) //PAN
+      if (Fl::event_button () == FL_LEFT_MOUSE) //PAN
         {
           int dx = Fl::event_x () - last_x;
           int dy = Fl::event_y () - last_y;
@@ -306,16 +317,33 @@ int cairo_plot::handle (int event)
           return 1;
         }
       break;
+
+    case FL_RELEASE:
+      if (Fl::event_button () == FL_LEFT_MOUSE && Fl::event_clicks ())
+        {
+          //double click
+          update_limits ();
+          redraw ();
+        }
+      return 1;
+
     case FL_MOUSEWHEEL:
-      //cout << "event_dy " << Fl::event_dy () << endl;
 
-      double xw = (xlim[1] - xlim[0]) * Fl::event_dy ();
-      set_xlim (xlim[0] - xw/10, xlim[1] + xw/10);
+#define SCALE_FACTOR 5
 
-      double yw = (ylim[1] - ylim[0]) * Fl::event_dy ();
-      set_ylim (ylim[0] - yw/10, ylim[1] + yw/10);
+      double dw = Fl::event_dy ();
 
-      redraw ();
+      if (dw < (- SCALE_FACTOR + 1))
+        {
+          dw = - SCALE_FACTOR + 1;
+          cout << "limit dw to " << dw << endl;
+        }
+
+      double zoom_factor = 1 + dw/SCALE_FACTOR;
+      cout << "zoom_factor=" << zoom_factor << endl;
+
+      zoom (zoom_factor);
+
       return 1;
     }
   return 1;

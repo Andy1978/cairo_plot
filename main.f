@@ -26,7 +26,7 @@ Function {} {open
     }
     Fl_Button {} {
       label {y = 0.5 * x}
-      callback {plot->clear_points ();
+      callback {plot->clear ();
 
 for (int k=0;k<10;++k)
   plot->add_point(k, 0.5*k);
@@ -37,7 +37,7 @@ plot->redraw ();}
     }
     Fl_Button {} {
       label {y = cos (x)}
-      callback {plot->clear_points ();
+      callback {plot->clear ();
 
 for (int k=0;k<100;++k)
   {
