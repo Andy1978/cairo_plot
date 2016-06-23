@@ -54,5 +54,17 @@ plot->redraw ();}
 plot->load_csv (fn.c_str (), 900);}
       xywh {800 110 150 40}
     }
+    Fl_Input vi_xlabel {
+      label xlabel
+      callback {plot->set_xlabel (o->value());
+plot->redraw ();}
+      xywh {800 195 145 25} align 5 when 1
+    }
+    Fl_Input vi_ylabel {
+      label ylabel
+      callback {plot->set_ylabel (o->value());
+plot->redraw ();}
+      xywh {800 245 145 25} align 5 when 1
+    }
   }
 }

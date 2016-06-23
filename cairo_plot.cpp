@@ -35,14 +35,9 @@ cairo_plot::~cairo_plot ()
   //~ delete (*it);
 }
 
-void cairo_plot::cairo_draw_label (double x, double y, int align, const char *str, double size)
+void cairo_plot::cairo_draw_label (double x, double y, int align, const char *str, double size, double rot)
 {
   cairo_save (cr);
-
-  size=20;
-  double dx = size;
-  double dy = size;
-
   cairo_move_to (cr, x, y);
 
   //print_matrix ();
@@ -51,17 +46,10 @@ void cairo_plot::cairo_draw_label (double x, double y, int align, const char *st
   tmp.xx = 1;
   tmp.yy = 1;
   cairo_set_matrix (cr, &tmp);
+
+  cairo_rotate (cr, rot);
+
   //print_matrix ();
-
-  //cairo_scale (cr, 1, -1);
-
-  //~ cairo_device_to_user_distance (cr, &dx, &dy);
-//~
-  //~ printf ("size=%f, dx=%f, dy=%f align=%i\n", size, dx, dy, align);
-  //~ if (dx > -dy)
-  //~ cairo_set_font_size (cr, dx);
-  //~ else
-  //~ cairo_set_font_size (cr, -dy);
 
   cairo_set_font_size (cr, size);
   cairo_text_extents_t extents;
@@ -74,11 +62,11 @@ void cairo_plot::cairo_draw_label (double x, double y, int align, const char *st
     }
   else if (align == 1)  //top
     {
-      cairo_rel_move_to (cr, - (extents.width/2 + extents.x_bearing), extents.height + dy/3);
+      cairo_rel_move_to (cr, - (extents.width/2 + extents.x_bearing), extents.height + size/3);
     }
   else if (align == 2) //right
     {
-      cairo_rel_move_to (cr, - (extents.width + extents.x_bearing) - dx/3, - extents.height/2 - extents.y_bearing);
+      cairo_rel_move_to (cr, - (extents.width + extents.x_bearing) - size/3, - extents.height/2 - extents.y_bearing);
     }
 
   cairo_show_text (cr, str);
@@ -121,14 +109,14 @@ void cairo_plot::cairo_draw_axes ()
     {
       ostringstream tmp;
       tmp << *it;
-      cairo_draw_label (*it - xlim[0], 0, 1, tmp.str().c_str (), 15);
+      cairo_draw_label (*it - xlim[0], 0, 1, tmp.str().c_str (), 20);
     }
 
   for (vector<double>::iterator it = ytick.begin() ; it != ytick.end(); ++it)
     {
       ostringstream tmp;
       tmp << *it;
-      cairo_draw_label (0, *it - ylim[0], 2, tmp.str().c_str (), 15);
+      cairo_draw_label (0, *it - ylim[0], 2, tmp.str().c_str (), 20);
     }
 
   cairo_identity_matrix (cr);
@@ -157,6 +145,10 @@ void cairo_plot::cairo_draw()
   // use 10% and 90% as 0..1
   cairo_translate(cr, border, border);
   cairo_scale (cr, 1 - 2 * border, 1 - 2 * border);
+
+  // draw xlabel and ylabel
+  cairo_draw_label (0.5, -border/2, 1, xlabel.c_str (), 20, 0);
+  cairo_draw_label (-border, 0.5, 1, ylabel.c_str (), 20, - M_PI/2);
 
   // now scale to xlim and ylim
   cairo_scale (cr, 1/(xlim[1] - xlim[0]), 1/(ylim[1] - ylim[0]));
@@ -264,16 +256,13 @@ void cairo_plot::load_csv (const char *fn, double FS)
 
       if (in.fail () && ! in.eof ())
         cerr << "Couldn't read double in line " << cnt << endl;
-      cout << "read " << cnt << " values..." << endl;
+      //cout << "read " << cnt << " values..." << endl;
 
       in.close();
     }
   else
     cerr << "Unable to open file '" << fn << "'" << endl;
 
-  add_marker (11, 35, 30, 1.0, 0.0, 0.0);
-  add_marker (12, 25, 20, 0.0, 1.0, 0.0);
-  add_marker (12, 15, 10, 0.0, 0.0, 1.0);
 }
 
 int cairo_plot::handle (int event)
@@ -336,11 +325,11 @@ int cairo_plot::handle (int event)
       if (dw < (- SCALE_FACTOR + 1))
         {
           dw = - SCALE_FACTOR + 1;
-          cout << "limit dw to " << dw << endl;
+          //cout << "limit dw to " << dw << endl;
         }
 
       double zoom_factor = 1 + dw/SCALE_FACTOR;
-      cout << "zoom_factor=" << zoom_factor << endl;
+      //cout << "zoom_factor=" << zoom_factor << endl;
 
       zoom (zoom_factor);
 

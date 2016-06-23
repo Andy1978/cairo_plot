@@ -47,6 +47,9 @@ private:
   double linewidth;  // in pixels, default 2px
   double gridlinewidth;  // in pixels, default 1px
 
+  string xlabel;
+  string ylabel;
+
   vector<double> xtick;
   vector<double> ytick;
   double xlim[2];
@@ -72,7 +75,7 @@ private:
 
   vector<marker*> plot_marker;
 
-  void cairo_draw_label (double x, double y, int align, const char *str, double size);
+  void cairo_draw_label (double x, double y, int align, const char *str, double size, double rot = 0);
   void cairo_draw_grid ();
   void cairo_draw_axes ();
   void cairo_draw ();
@@ -189,7 +192,7 @@ public:
 
   void set_xlim (double x0, double x1)
   {
-    cout << "set_xlim (" << x0 << ", " << x1 << ")" << endl;
+    // cout << "set_xlim (" << x0 << ", " << x1 << ")" << endl;
 
     if (x1 > x0 + zoom_min_x)
       {
@@ -199,7 +202,6 @@ public:
         if (xtickmode == AUTO)
           {
             double step = tick_from_lim (xlim[1] - xlim[0]);
-            cout << "xstep=" << step << endl;
             set_xtick (ceil (xlim[0] / step) * step, step, floor (xlim[1] / step) * step);
           }
       }
@@ -213,7 +215,7 @@ public:
 
   void set_ylim (double y0, double y1)
   {
-    cout << "set_ylim (" << y0 << ", " << y1 << ")" << endl;
+    //cout << "set_ylim (" << y0 << ", " << y1 << ")" << endl;
 
     if (y1 > y0 + zoom_min_y)
       {
@@ -232,6 +234,16 @@ public:
   {
     y0 = ylim[0];
     y1 = ylim[1];
+  }
+
+  void set_xlabel (string s)
+  {
+    xlabel = s;
+  }
+
+  void set_ylabel (string s)
+  {
+    ylabel = s;
   }
 
   void update_limits ()
