@@ -56,17 +56,27 @@ cairo_surface_t*  cairo_box::set_surface(int wo, int ho)
 void cairo_box::draw(void)
 {
   // using fltk functions, set up white background with thin black frame
-  fl_color(FL_WHITE);
-  fl_rectf(x(), y(), w(), h());
+  //fl_color(FL_WHITE);
+  //fl_rectf(x(), y(), w(), h());
+  draw_box();
+
+// Rahmen außenrum?
+#if 0
   fl_color(FL_BLACK);
   fl_rect(x(), y(), w(), h());
+#endif
 
   //fl_push_clip(100,100,100,100);
   //fl_color(FL_BLACK);
   //fl_line(1,1,parent()->w(),parent()->h());
 
   // set up cairo structures
-  surface = set_surface(parent()->w(), parent()->h());
+  Fl_Widget *p = this;
+  while (p->parent ())
+    p = p->parent ();
+
+  //printf ("p=%p\n", p);
+  surface = set_surface(p->w(), p->h());
   cr      = cairo_create(surface);
   cairo_set_source_rgb (cr, 0.0, 0.0, 0.0); // set drawing color to black
   cairo_new_path(cr);
@@ -77,4 +87,10 @@ void cairo_box::draw(void)
   // release the cairo context
   cairo_destroy(cr);
   cairo_surface_destroy(surface);
+}
+
+void cairo_box::resize (int X, int Y, int W, int H)
+{
+  Fl_Box::resize (X, Y, W, H);
+  parent ()->redraw ();
 }

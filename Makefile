@@ -12,7 +12,7 @@ main.cpp main.h: main.f
 %.o:%.cpp %.h
 	g++ $(CPPFLAGS) -c $<
 
-main: main.o cairo_box.o cairo_plot.o cairo_star.o
+main: main.o cairo_box.o cairo_plot.o
 	g++ $(CPPFLAGS) $^ -o $@ $(LDFLAGS)
 
 style:

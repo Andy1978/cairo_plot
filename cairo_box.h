@@ -44,7 +44,7 @@ If not, see <http://www.gnu.org/licenses/>.
 #endif
 
 #include <iostream>
-#include <stdio.h>
+#include <cstdio>
 
 class cairo_box : public Fl_Box
 {
@@ -66,6 +66,7 @@ public:
     printf ("| xy=%8.3f yy=%8.3f y0=%8.3f |\n", matrix.yx, matrix.yy, matrix.y0);
     printf ("|    %8.3f    %8.3f    %8.3f |\n", 0.0, 0.0, 1.0);
   }
+  virtual void resize (int x, int y, int w, int h);
   virtual void cairo_draw() = 0;
 };
 

@@ -5,9 +5,6 @@ code_name {.cxx}
 decl {\#include "cairo_plot.h"} {public local
 }
 
-decl {\#include "cairo_star.h"} {public local
-}
-
 decl {\#include <fstream>} {public local
 }
 
@@ -17,7 +14,7 @@ decl {\#include <string>} {public local
 Function {} {open
 } {
   Fl_Window mainwin {
-    label {start test} open selected
+    label {start test} open
     xywh {2615 492 960 575} type Double resizable visible
   } {
     Fl_Box plot {
@@ -29,9 +26,9 @@ Function {} {open
       callback {plot->clear ();
 
 for (int k=0;k<10;++k)
-  plot->add_point(k, 0.5*k);
+  plot->add_data(k, 0.5*k, 0);
 
-plot->update_limits ();
+plot->auto_zoom ();
 plot->redraw ();}
       xywh {800 20 150 40}
     }
@@ -42,16 +39,16 @@ plot->redraw ();}
 for (int k=0;k<100;++k)
   {
     double p = k/10.0;
-    plot->add_point(p, cos (p));
+    plot->add_data(p, cos (p), 0);
   }
-plot->update_limits ();
+plot->auto_zoom ();
 plot->redraw ();}
       xywh {800 65 150 40}
     }
     Fl_Button {} {
       label {load csv}
       callback {string fn = "Stahlwille_MANOSKOP_730_4_610315061_2.csv";
-plot->load_csv (fn.c_str (), 900);}
+plot->load_csv (fn.c_str ());}
       xywh {800 110 150 40}
     }
     Fl_Input vi_xlabel {

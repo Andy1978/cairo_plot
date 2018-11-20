@@ -1,5 +1,5 @@
 /*
- * simple plot using cairo
+ * Plot using cairo
  */
 
 #ifndef CAIRO_PLOT_H
@@ -12,43 +12,97 @@
 #include <algorithm>    // std::min_element, std::max_element
 #include <sstream>      // ostringstream
 #include <cassert>
-#include <cmath> //only for testing, FIXME
+#include <cmath>        // only for testing, FIXME
 #include <fstream>
+
+//#define DEBUG_DRAW_TIMING
+
+// Wieviele Punkte werden maximal simultan im Fenster angezeigt?
+// Wird dieser Wert überschritten, erhöht sich plot_increment
+// und in Folge dessen wird nur jeder n-te Wert angezeigt
+
+#define MAX_VISIBLE_POINTS 5000
+
+// entspricht 33.3 min bei 100Hz
+#define MAX_NUM_SAMPLES 200000
+
+//#define MAX_NUM_SAMPLES 100
+//#define MAX_NUM_SAMPLES 6
+
+#define NUM_CHANNELS 3
 
 using namespace std;
 
 enum mode {AUTO, MANUAL};
+enum edrag_mode {PAN, ZOOM};
 
 class cairo_plot;
 
 class marker
 {
-private:
-  double x;
-  double y;
-  double diameter;
-  double color[3];
-
 public:
-  marker (double _x, double _y, double _dia, double red, double green, double blue):
-    x(_x), y(_y), diameter (_dia)
+
+  double color[3];
+  double linewidth;
+
+  marker (double _linewidth, double red, double green, double blue)
+    : linewidth(_linewidth)
   {
     color[0] = red;
     color[1] = green;
     color[2] = blue;
   }
-  friend cairo_plot;
+
+  virtual ~marker ()
+  { }
+
+};
+
+class point_marker: public marker
+{
+public:
+
+  double x;
+  double y;
+  double diameter;
+
+  point_marker (double _x, double _y, double _linewidth, double _dia, double red, double green, double blue):
+    marker(_linewidth, red, green, blue),
+    x(_x), y(_y), diameter (_dia)
+  { }
+
+};
+
+class line_marker: public marker
+{
+public:
+  enum style {horizontal, vertical};
+
+  double pos;
+  style s;
+
+  line_marker (double _pos, style _s, double _linewidth, double red, double green, double blue):
+    marker(_linewidth, red, green, blue),
+    pos(_pos), s(_s)
+  { }
+
 };
 
 class cairo_plot : public cairo_box
 {
 private:
-  double border;     // as fraction, default 10%
-  double linewidth;  // in pixels, default 2px
-  double gridlinewidth;  // in pixels, default 1px
+  double border_left;       // as fraction, default 10%
+  double border_right;      // as fraction, default 10%
+  double border_top;        // as fraction, default 10%
+  double border_bottom;     // as fraction, default 10%
+  double linewidth;         // in pixels, default 2px
+  double gridlinewidth;     // in pixels, default 1px
 
   string xlabel;
+  string xunit;
+
   string ylabel;
+  string yunit;
 
   vector<double> xtick;
   vector<double> ytick;
@@ -61,198 +115,103 @@ private:
   mode xlimmode;
   mode ylimmode;
 
-  vector<double> xdata;
-  vector<double> ydata;
-  double xmin;
-  double xmax;
-  double ymin;
-  double ymax;
+  edrag_mode drag_mode;
 
-  double zoom_max_x;
-  double zoom_min_x;
-  double zoom_max_y;
-  double zoom_min_y;
+  // die eigentlichen Samples
+  unsigned int num_samples;
+  float data[NUM_CHANNELS][MAX_NUM_SAMPLES];
+  float data_dec_sum[NUM_CHANNELS];
+
+  // Berechnete Statistiken min/max
+  float data_min[NUM_CHANNELS];
+  float data_max[NUM_CHANNELS];
+
+  // welcher Kanal wird für Abszisse, welcher für y_chan verwendet?
+  int x_chan;
+  int y_chan;
+
+  double zoom_max_w;
+  double zoom_min_w;
+  double zoom_max_h;
+  double zoom_min_h;
+
+  double zoom_rect[4];  //x,y,w,h
 
   vector<marker*> plot_marker;
 
-  void cairo_draw_label (double x, double y, int align, const char *str, double size, double rot = 0);
+  void cairo_draw_label (double x, double y, int align, const char *str, double size, double rot);
   void cairo_draw_grid ();
   void cairo_draw_axes ();
   void cairo_draw ();
+
+  void pixel2data (int _x, int _y, double &data_x, double &data_y, bool only_scale);
+
+  void update_stats (bool clear = false);
+
+  int calc_visible_points ();
+
+  // jeder wievielte Punkt wird gezeichnet?
+  // Dient der Reduzierung der CPU Last bei großer Datenmenge
+  unsigned int plot_increment;
+
+  // Dezimierungsfaktor, wenn die Anzahl der sample MAX_NUM_SAMPLES überschreitet
+  int decimation_factor;
 
 public:
   cairo_plot(int x, int y, int w, int h, const char *l=0);
   ~cairo_plot ();
 
-  void add_point (double x, double y)
-  {
-    xdata.push_back (x);
-    ydata.push_back (y);
+  void downsample2 ();
 
-    if (x > xmax)
-      xmax = x;
-    if (x < xmin)
-      xmin = x;
+#if NUM_CHANNELS == 3
+  void add_data (float x0, float x1, float x2);
+#endif
 
-    if (y > ymax)
-      ymax = y;
-    if (y < ymin)
-      ymin = y;
+  int add_point_marker (double _x, double _y, double _linewidth, double _dia, double red, double green, double blue);
+  int add_line_marker (double _pos, line_marker::style _s, double _w, double red, double green, double blue);
 
-    //cout << "xmin=" << xmin << " xmax=" << xmax << " ymin=" << ymin << " ymax=" << ymax << endl;
-  }
+  void clear ();
+  unsigned int get_max_ticklen (double start, double step, double stop);
 
-  void add_marker (double x, double y, double dia, double red, double green, double blue)
-  {
-    plot_marker.push_back (new marker (x, y, dia, red, green, blue));
-  }
+  void set_xtick (double start, double step, double stop);
+  void set_ytick (double start, double step, double stop);
 
-  void clear ()
-  {
-    xdata.clear ();
-    ydata.clear ();
-    xmin = 1.0/0.0;
-    ymin = 1.0/0.0;
-    xmax = - xmin;
-    ymax = - ymin;
-    plot_marker.clear ();
-  }
+  // Abstände der Gitternetzlinien aus dem anzuzeigenden Bereich
+  // berechnen
+  double tick_from_lim (double r);
+  void zoom (double factor);
 
-  void set_xtick (double start, double step, double stop)
-  {
-    xtick.clear ();
-    for (double k=start; k<stop; k+=step)
-      xtick.push_back (k);
-    xtick.push_back (stop);
-  }
+  // die minimale und maximale "Daten-Breite" des Plots
+  void set_zoom_limits (double min_w, double max_w, double min_h, double max_h);
 
-  //~ double min_xtick ()
-  //~ {
-  //~ return *min_element (xtick.begin (), xtick.end());
-  //~ }
-//~
-  //~ double max_xtick ()
-  //~ {
-  //~ return *max_element (xtick.begin (), xtick.end());
-  //~ }
+  void set_xlim (double x0, double x1);
+  void get_xlim (double &x0, double &x1);
 
-  void set_ytick (double start, double step, double stop)
-  {
-    ytick.clear ();
-    for (double k=start; k<stop; k+=step)
-      ytick.push_back (k);
-    ytick.push_back (stop);
-  }
+  void set_ylim (double y0, double y1);
+  void get_ylim (double &y0, double &y1);
 
-  //~ double min_ytick ()
-  //~ {
-  //~ return *min_element (ytick.begin (), ytick.end());
-  //~ }
-//~
-  //~ double max_ytick ()
-  //~ {
-  //~ return *max_element (ytick.begin (), ytick.end());
-  //~ }
+  void set_drag_mode (edrag_mode d);
 
+  // ein ! am Anfang macht den Label unsichtbar
+  void set_xlabel (const string &s);
+  void set_ylabel (const string &s);
 
-  double tick_from_lim (double lim)
-  {
-    // in GNU Octave
-    // n = round (3 * log10 (range / 7));
-    // ret = (mod(n, 3).^2 + 1) .* 10.^floor(n/3);
-    // Attention:
-    // Octave mod (n, 3) is not equal to C++ n%3
+  // ein ! am Anfang macht die Einheit unsichtbar
+  // FIXME: Wird momentan nur intern gespeichert, noch nicht gezeichnet
+  // macht aber für save_measurement trotzdem schon Sinn
+  void set_xunit (const string &s);
+  void set_yunit (const string &s);
 
-    int n = round (3 * log (lim / 7.0) / log (10));
-    double mod3 = n%3;
-    if (mod3 < 0)
-      mod3 += 3;
+  void auto_zoom ();
 
-    return (pow (mod3, 2) + 1) * pow (10, floor (n / 3.0));
-  }
+  // alle Werte realtiv: 0.1 -> 10% der Höhe/Breite
+  void set_border (double left, double top, double right, double bottom);
 
-  void zoom (double factor)
-  {
-    double new_w =  (xlim[1] - xlim[0]) * factor;
-    double new_h =  (ylim[1] - ylim[0]) * factor;
+  void set_x_chan (int chan);
+  void set_y_chan (int chan);
 
-    if (   new_w < zoom_max_x
-           && new_w > zoom_min_x
-           && new_h < zoom_max_y
-           && new_h > zoom_min_y )
-      {
-        double mean_x = (xlim[0] + xlim[1]) / 2;
-        double mean_y = (ylim[0] + ylim[1]) / 2;
-
-        set_xlim (mean_x - new_w/2, mean_x + new_w/2);
-        set_ylim (mean_y - new_h/2, mean_y + new_h/2);
-        redraw ();
-      }
-  }
-
-  void set_xlim (double x0, double x1)
-  {
-    // cout << "set_xlim (" << x0 << ", " << x1 << ")" << endl;
-
-    if (x1 > x0 + zoom_min_x)
-      {
-        xlim[0] = x0;
-        xlim[1] = x1;
-
-        if (xtickmode == AUTO)
-          {
-            double step = tick_from_lim (xlim[1] - xlim[0]);
-            set_xtick (ceil (xlim[0] / step) * step, step, floor (xlim[1] / step) * step);
-          }
-      }
-  }
-
-  void get_xlim (double &x0, double &x1)
-  {
-    x0 = xlim[0];
-    x1 = xlim[1];
-  }
-
-  void set_ylim (double y0, double y1)
-  {
-    //cout << "set_ylim (" << y0 << ", " << y1 << ")" << endl;
-
-    if (y1 > y0 + zoom_min_y)
-      {
-        ylim[0] = y0;
-        ylim[1] = y1;
-
-        if (ytickmode == AUTO)
-          {
-            double step = tick_from_lim (ylim[1] - ylim[0]);
-            set_ytick (ceil (ylim[0] / step) * step, step, floor (ylim[1] / step) * step);
-          }
-      }
-  }
-
-  void get_ylim (double &y0, double &y1)
-  {
-    y0 = ylim[0];
-    y1 = ylim[1];
-  }
-
-  void set_xlabel (string s)
-  {
-    xlabel = s;
-  }
-
-  void set_ylabel (string s)
-  {
-    ylabel = s;
-  }
-
-  void update_limits ()
-  {
-    set_xlim (xmin, xmax);
-    set_ylim (ymin, ymax * 1.1);
-  }
-
-  void load_csv (const char *fn, double FS);
+  void load_csv (const char *fn);
+  void save_csv (const char *fn);
 
   int handle (int event);
 };
